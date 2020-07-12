@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using Android.App;
@@ -96,6 +97,31 @@ namespace ACApp
             }
 
 
+            yourFormLayout = FindViewById<LinearLayout>(Resource.Id.linearLayout2);
+
+            parameters = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.WrapContent);
+
+            parameters.SetMargins(20, 20, 20, 10);
+            parameters.Width = 80;
+            yourFormLayout.RemoveAllViews();
+
+            for (int i = 0; i < count; i++)
+            {
+                //create new element
+                EditText letterTextEdit = new EditText(this);
+                letterTextEdit.Text = "";
+                /*button.SetBackgroundColor(Android.Graphics.Color.);
+                button.SetTextColor(Android.Graphics.Color.White);*/
+                letterTextEdit.LayoutParameters = parameters;
+
+                letterTextEdit.SetFilters(new IInputFilter[] { new InputFilterLengthFilter(1) });
+
+                letterTextEdit.Id = 100+i;
+
+                //Add the button
+                yourFormLayout.AddView(letterTextEdit);
+            }
+
         }
 
         public void findOnClick(object sender, EventArgs e) 
@@ -115,6 +141,45 @@ namespace ACApp
                 result += FindViewById<EditText>(i).Text;
             }
             result=result.Replace('*', '.');
+
+            return result;
+        }
+
+        private string getPosssibleLetters() 
+        {
+            string result = "";
+            int count = int.Parse(FindViewById<EditText>(Resource.Id.editText1).Text);
+
+            for (int i = 0; i < count; i++)
+            {
+                result += FindViewById<EditText>(100+i).Text;
+            }
+
+            return result;
+        }
+
+        private bool checkWord(string word, string possibleLetters) {
+            char[] wordArray = word.ToCharArray();
+            char[] pArray = possibleLetters.ToCharArray();
+
+            bool result = true;
+
+            Array.Sort(wordArray);
+            Array.Sort(pArray);
+
+            for (int i = 0; i < pArray.Length; i++) 
+            {
+                if (wordArray[i] == ' ') 
+                {
+                    var tmpList=wordArray.ToList();
+                    tmpList.Remove(' ');
+                    wordArray = tmpList.ToArray();
+                    i--;
+                    continue;
+                }
+                if (pArray[i] != wordArray[i])
+                    return false;
+            }
 
             return result;
         }
@@ -140,10 +205,16 @@ namespace ACApp
 
             Regex regex = new Regex(regExpression);
             MatchCollection matches = regex.Matches(text);
+
+            var possibleLetters = getPosssibleLetters();
+
             if (matches.Count > 0)
             {
                 foreach (Match match in matches)
-                    result += "\n" + match.Value;
+                {
+                    if (checkWord(match.Value, possibleLetters))
+                        result += "\n" + match.Value;
+                }
             }
             else
             {
